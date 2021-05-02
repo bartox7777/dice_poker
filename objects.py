@@ -1,6 +1,6 @@
 import os
 import pygame
-from pygame.sprite import Sprite
+from pygame.sprite import Sprite, Group
 
 
 pygame.init()
@@ -19,12 +19,10 @@ class Die(Sprite):
             raise Exception("Couldn't load image {}".format(dice_images[die_number-1]))
         self.rect = self.image.get_rect(x=x, y=y)
 
-    def draw(self, screen, x=None, y=None):
-        if x is not None:
-            self.rect.x = x
-        if y is not None:
-            self.rect.y = y
-        screen.blit(self.image, self.rect)
-
     def __repr__(self):
         return "Die {}".format(self.die_number)
+
+
+class Dice(Group):
+    def __init__(self):
+        super().__init__()
