@@ -1,6 +1,6 @@
 import os
 import pygame
-from pygame.sprite import Sprite
+from pygame.sprite import Sprite, Group
 
 
 pygame.init()
@@ -14,18 +14,15 @@ class Die(Sprite):
             raise Exception("die_number must be between 1 and 6")
         dice_images = [os.path.join("data", "die_{}.png".format(i+1)) for i in range(6)]
         try:
-            self.die = pygame.image.load(dice_images[die_number-1])
+            self.image = pygame.image.load(dice_images[die_number-1]).convert_alpha()
         except:
             raise Exception("Couldn't load image {}".format(dice_images[die_number-1]))
-        self.die_rect = self.die.get_rect(x=x, y=y)
-        print(self.die_rect)
-
-    def draw(self, screen, x=None, y=None):
-        if x is not None:
-            self.die_rect.x = x
-        if y is not None:
-            self.die_rect.y = y
-        screen.blit(self.die, self.die_rect)
+        self.rect = self.image.get_rect(x=x, y=y)
 
     def __repr__(self):
         return "Die {}".format(self.die_number)
+
+
+class Dice(Group):
+    def __init__(self):
+        super().__init__()
