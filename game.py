@@ -1,4 +1,5 @@
 # POKEROWE KOŚCI (inspiracja: https://www.kurnik.pl/kosci/)
+import os
 import sys
 import pygame
 from random import randint
@@ -18,7 +19,7 @@ def get_random_dice(number=5):
 
 screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
 pygame.display.set_caption("Dice poker")
-pygame.display.set_icon(pygame.image.load("die_6.png"))
+pygame.display.set_icon(pygame.image.load(os.path.join("data", "die_6.png")))
 shuffle = True
 random_dice = get_random_dice()
 
