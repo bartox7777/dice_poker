@@ -33,7 +33,7 @@ class Dice(Group):
 
 
 class Table(Sprite):
-    def __init__(self, surface, color, topleft_x, topleft_y, width, height, players=2):
+    def __init__(self, surface, color, topleft_x, topleft_y, width, height, players=4):
         super().__init__()
         self.surface = surface
         self.color = color
@@ -41,6 +41,7 @@ class Table(Sprite):
         self.topleft_y = topleft_y
         self.width = width
         self.height = height
+        self.players = players
 
     def draw(self):
         BLACK = (0, 0, 0)
@@ -49,12 +50,14 @@ class Table(Sprite):
         BOLDER_VERTICAL_LINES = [6, 7, 15]
         INFOS = ["1", "2", "3", "4", "5", "6", "BONUS", "SUM", "TRIPLET", "QUARTET", "FULL HOUSE", "MINI SERIE", "MAXI SERIE", "KNIFFEL", "CHANCE", "SUM", "TOTAL"]
 
+        # DRAWING VERTICAL LINES AND PRINTING INFOS
+
         draw.rect(self.surface, self.color, pygame.Rect(self.topleft_x, self.topleft_y, self.width, self.height))
         vertical_line_space = int(self.height/18)
         vertical_line_start = Vector2(self.topleft_x+PADDING, self.topleft_y)
         vertical_line_end = Vector2(self.topleft_x+self.width-PADDING, self.topleft_y)
+        font = pygame.font.Font(None, int(self.width/20))
 
-        font = pygame.font.Font(None, int(self.width/15))
         texts = [font.render(info, 1, BLACK) for info in INFOS]
 
         offset = Vector2(0, 0)
@@ -74,12 +77,24 @@ class Table(Sprite):
             else:
                 draw.line(self.surface, BLACK, vertical_line_start+offset, vertical_line_end+offset)
 
+        # DRAWING HORIZONTAL LINES AND PRINTING PLAYERS
+
         horizontal_line_start = Vector2(max_text_x+10, self.topleft_y+PADDING)
         horizontal_line_end = Vector2(max_text_x+10, self.topleft_y+self.height-PADDING)
-        draw.line(self.surface, BLACK, horizontal_line_start, horizontal_line_end)
 
-        # from "players" to "total" row
+        # from "players" row to "total" row
         points_x_start = max_text_x
         points_y_start = self.topleft_y+PADDING
         points_width = self.width - (max_text_x - self.topleft_x)
-        print(points_x_start, points_y_start, points_width)
+        column_width_per_player = points_width / self.players
+        row_height = vertical_line_space
+
+        offset = Vector2(0, 0)
+        for i in range(self.players):
+            draw.line(self.surface, BLACK, horizontal_line_start+offset, horizontal_line_end+offset)
+            text = font.render("#{}".format(i+1), 1, BLACK)
+            text_pos = text.get_rect(topleft=(points_x_start+offset.x+self.width/15, points_y_start))
+            self.surface.blit(text, text_pos)
+            offset.x += column_width_per_player
+
+
