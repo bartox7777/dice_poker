@@ -26,9 +26,7 @@ pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
 screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
 
 dice_group = Dice()
-table = Table(screen, DARK_WHITE, 500, 120, 400, 700)
-# table_group = TableGroup()
-# table_group.add(table)
+table = Table(screen, DARK_WHITE, 500, 120, 400, 720)
 
 shuffle = True
 get_random_dice(dice_group)
