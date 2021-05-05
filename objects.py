@@ -32,13 +32,10 @@ class Dice(Group):
         super().__init__()
 
 
-# class VerticalPlayerRectsWithPoints:
-#     def __init__(self)
-
-
 class Table(Sprite):
-    def __init__(self, surface, color, topleft_x, topleft_y, width, height, players=4):
+    def __init__(self, surface, color, topleft_x, topleft_y, width, height, players):
         GREY = (50, 50, 50)
+        RED = (255, 0, 0)
 
         super().__init__()
         self.surface = surface
@@ -52,11 +49,15 @@ class Table(Sprite):
 
         self.__INFOS = ["1", "2", "3", "4", "5", "6", "BONUS", "SUM", "TRIPLET", "QUARTET", "FULL HOUSE", "MINI SERIE", "MAXI SERIE", "KNIFFEL", "CHANCE", "SUM", "TOTAL"]
 
+        self.texts_points_pos = []
+
         self.players_points = []
         self.texts_players_points = []
+        self.blocked_points = []
         for _ in range(self.players):
             self.players_points.append([0] * len(self.__INFOS))
-            self.texts_players_points.append([self.font.render("0", 1, GREY)] * len(self.__INFOS))
+            self.texts_players_points.append([self.font.render("0", 1, RED)] * len(self.__INFOS)) # TODO: show nothing instead of 0
+            self.blocked_points.append([False] * len(self.__INFOS))
 
     def draw(self):
         BLACK = (0, 0, 0)
@@ -104,21 +105,21 @@ class Table(Sprite):
         row_height = horizontal_line_space
 
 
-        texts_points_pos = []
         for _ in range(self.players):
-            texts_points_pos.append([])
+            self.texts_points_pos.append([])
 
         i = 0
         offset = Vector2(0, 0)
         for player_texts in self.texts_players_points:
             for text in player_texts:
                 offset.y += row_height
-                texts_points_pos[i].append(text.get_rect(topleft=(points_x_start+offset.x+VERTICAL_TEXT_OFFSET, points_y_start+offset.y)))
+                self.texts_points_pos[i].append(text.get_rect(topleft=(points_x_start+offset.x+VERTICAL_TEXT_OFFSET, points_y_start+offset.y)))
+
             offset.y = 0
             offset.x += column_width_per_player
             i += 1
 
-        for player_texts, player_texts_pos in zip(self.texts_players_points, texts_points_pos):
+        for player_texts, player_texts_pos in zip(self.texts_players_points, self.texts_points_pos):
             for player_text, player_text_pos in zip(player_texts, player_texts_pos):
                 self.surface.blit(player_text, player_text_pos)
 
@@ -132,7 +133,27 @@ class Table(Sprite):
             self.surface.blit(text, text_pos)
             offset.x += column_width_per_player
 
-    def update(self): # updating points
-        pass
+    # update points and catch point hover
+    def update(self, dice_group, player_move, mouse_pos):
+        GREEN = (110, 160, 100)
+        BLACK = (0, 0, 0)
+        RED = (255, 0, 0)
+        UNCLICKABLE_POINTS = [6, 7, 15, 16]
+        
+        temp_points = self.players_points[player_move-1].copy()
+        player_texts = self.texts_players_points[player_move-1]
+        player_texts_pos = self.texts_points_pos[player_move-1]
+        player_blocked_points = self.blocked_points[player_move-1]
+
+        for i in range(len(player_texts)):
+            if player_texts_pos[i].inflate(20, 20).collidepoint(mouse_pos):
+                if i not in UNCLICKABLE_POINTS and not player_blocked_points[i]:
+                    player_texts[i] = self.font.render(str(self.players_points[player_move][i]), 1, GREEN)
+                    for event in pygame.event.get():
+                        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                            player_blocked_points[i] = True
+                            player_texts[i] = self.font.render(str(self.players_points[player_move][i]), 1, RED)
+            elif not player_blocked_points[i]:
+                player_texts[i] = self.font.render(str(self.players_points[player_move][i]), 1, BLACK) # TODO: change inactive color player to GRAY
 
 
