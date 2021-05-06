@@ -34,7 +34,7 @@ class Dice(Group):
 
 class Table(Sprite):
     def __init__(self, surface, color, topleft_x, topleft_y, width, height, players):
-        GREY = (50, 50, 50)
+        GREY = (120, 120, 120)
         RED = (255, 0, 0)
 
         super().__init__()
@@ -48,6 +48,7 @@ class Table(Sprite):
         self.font = pygame.font.Font(None, int(self.width/20))
 
         self.__INFOS = ["1", "2", "3", "4", "5", "6", "BONUS", "SUM", "TRIPLET", "QUARTET", "FULL HOUSE", "MINI SERIE", "MAXI SERIE", "KNIFFEL", "CHANCE", "SUM", "TOTAL"]
+        self.UNCLICKABLE_POINTS = [6, 7, 15, 16]
 
         self.texts_points_pos = []
 
@@ -56,7 +57,7 @@ class Table(Sprite):
         self.blocked_points = []
         for _ in range(self.players):
             self.players_points.append([0] * len(self.__INFOS))
-            self.texts_players_points.append([self.font.render("0", 1, RED)] * len(self.__INFOS)) # TODO: show nothing instead of 0
+            self.texts_players_points.append([self.font.render("0", 1, GREY)] * len(self.__INFOS)) # TODO: show nothing instead of 0
             self.blocked_points.append([False] * len(self.__INFOS))
 
     def draw(self):
@@ -77,7 +78,7 @@ class Table(Sprite):
 
         offset = Vector2(0, 0)
         max_text_x = 0
-        for i in range(17):
+        for i in range(len(self.__INFOS)):
             offset.y += horizontal_line_space
             text = texts[i]
             text_pos = text.get_rect(topleft=(self.topleft_x+PADDING+10, horizontal_line_start.y+offset.y+10))
@@ -138,22 +139,87 @@ class Table(Sprite):
         GREEN = (110, 160, 100)
         BLACK = (0, 0, 0)
         RED = (255, 0, 0)
-        UNCLICKABLE_POINTS = [6, 7, 15, 16]
-        
+        GREY = (120, 120, 120)
+
+        # count points from roll
         temp_points = self.players_points[player_move-1].copy()
+        player_blocked_points = self.blocked_points[player_move-1]
+
+        dice = dice_group.sprites()
+        dice_numbers = [die.die_number for die in dice]
+        for i in range(len(temp_points)):
+            if i not in self.UNCLICKABLE_POINTS and not player_blocked_points[i]:
+                # python switch..case please <3 #
+                # 1 - 6
+                if i in range(6):
+                    for j in range(6):
+                        sum_of_specific_dots = dice_numbers.count(j+1) * (j+1)
+                        temp_points[j] = sum_of_specific_dots
+
+                # TRIPLET and QUARTET
+                if i in [8, 9]:
+                    for die_number in set(dice_numbers):
+                        if dice_numbers.count(die_number) == 3:
+                            temp_points[8] = sum(dice_numbers)
+                        if dice_numbers.count(die_number) == 4:
+                            temp_points[9] = sum(dice_numbers)
+
+                # FULL HOUSE (3+2x)
+                if i == 10:
+                    if len(set(dice_numbers)) == 2:
+                        temp_points[i] = 25
+
+                # MINI SERIE
+                if i == 11:
+                    counted = 1
+                    sorted_dice_numbers = sorted(dice_numbers)
+                    for j in range(len(dice_numbers) - 1):
+                        if sorted_dice_numbers[j] + 1 == sorted_dice_numbers[j+1]:
+                            counted += 1
+                        else:
+                            counted = 1
+                        if counted == 4:
+                            temp_points[i] = 30
+
+                # MAXI SERIE
+                if i == 12:
+                    counted = 1
+                    sorted_dice_numbers = sorted(dice_numbers)
+                    for j in range(len(dice_numbers) - 1):
+                        if sorted_dice_numbers[j] + 1 == sorted_dice_numbers[j+1]:
+                            counted += 1
+                        else:
+                            counted = 1
+                        if counted == 5:
+                            temp_points[i] = 30
+                # KNIFFEL
+                if i == 13:
+                    if len(set(dice_numbers)) == 1:
+                        temp_points[i] = 50
+
+                # CHANCE
+                if i == 14:
+                    temp_points[i] = sum(dice_numbers)
+            else:
+                temp_points[i] = None
+
+        # update table and show points player got and points from roll
         player_texts = self.texts_players_points[player_move-1]
         player_texts_pos = self.texts_points_pos[player_move-1]
-        player_blocked_points = self.blocked_points[player_move-1]
 
         for i in range(len(player_texts)):
             if player_texts_pos[i].inflate(20, 20).collidepoint(mouse_pos):
-                if i not in UNCLICKABLE_POINTS and not player_blocked_points[i]:
-                    player_texts[i] = self.font.render(str(self.players_points[player_move][i]), 1, GREEN)
+                if i not in self.UNCLICKABLE_POINTS and not player_blocked_points[i]:
+                    player_texts[i] = self.font.render(str(temp_points[i]), 1, GREEN)
                     for event in pygame.event.get():
                         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                             player_blocked_points[i] = True
-                            player_texts[i] = self.font.render(str(self.players_points[player_move][i]), 1, RED)
+                            player_texts[i] = self.font.render(str(temp_points[i]), 1, RED)
+                            for j in range(len(player_texts)): # when player ends round make gray his column and give zeros for unblocked rows
+                                if not player_blocked_points[j]:
+                                    player_texts[j] = self.font.render("0", 1, GREY)
+                            return True
             elif not player_blocked_points[i]:
-                player_texts[i] = self.font.render(str(self.players_points[player_move][i]), 1, BLACK) # TODO: change inactive color player to GRAY
+                player_texts[i] = self.font.render(str(temp_points[i]), 1, BLACK) # TODO: change inactive color player to GRAY
 
-
+# TODO: dont show None in UNCLICKABLE_POINTS and dont show zeros for default

@@ -24,7 +24,7 @@ pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
 
 screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
-players = 2 # changable
+players = 4 # changable
 
 dice_group = Dice()
 table = Table(screen, DARK_WHITE, 500, 120, 420, 720, players)
@@ -37,7 +37,12 @@ get_random_dice(dice_group)
 table.draw()
 
 while True:
-    table.update(dice_group, player_move, pygame.mouse.get_pos())
+    if table.update(dice_group, player_move, pygame.mouse.get_pos()): # clicked
+        player_move += 1
+        shuffle_times = 0
+        get_random_dice(dice_group)
+        if player_move > players:
+            player_move = 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
