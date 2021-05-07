@@ -192,7 +192,7 @@ class Table(Sprite):
                         else:
                             counted = 1
                         if counted == 5:
-                            temp_points[i] = 30
+                            temp_points[i] = 40
                 # KNIFFEL
                 if i == 13:
                     if len(set(dice_numbers)) == 1:
@@ -222,7 +222,7 @@ class Table(Sprite):
                                 # update SUMS and BONUS and TOTAL
                                 # BONUS
                                 if j == 6:
-                                    if sum(player_points[:6]) > 1:
+                                    if sum(player_points[:6]) >= 63:
                                         player_points[6] = 35
                                 if j == 7:
                                     player_points[7] = sum(player_points[:7])
