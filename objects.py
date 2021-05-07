@@ -143,6 +143,7 @@ class Table(Sprite):
 
         # count points from roll
         temp_points = self.players_points[player_move-1].copy()
+        player_points = self.players_points[player_move-1]
         player_blocked_points = self.blocked_points[player_move-1]
 
         dice = dice_group.sprites()
@@ -202,6 +203,7 @@ class Table(Sprite):
                     temp_points[i] = sum(dice_numbers)
             else:
                 temp_points[i] = None
+                player_blocked_points[i] = True
 
         # update table and show points player got and points from roll
         player_texts = self.texts_players_points[player_move-1]
@@ -215,9 +217,25 @@ class Table(Sprite):
                         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                             player_blocked_points[i] = True
                             player_texts[i] = self.font.render(str(temp_points[i]), 1, RED)
-                            for j in range(len(player_texts)): # when player ends round make gray his column and give zeros for unblocked rows
-                                if not player_blocked_points[j]:
-                                    player_texts[j] = self.font.render("0", 1, GREY)
+                            player_points[i] = temp_points[i]
+                            for j in range(len(player_texts)): # when player ends round make gray his column and give player_points for unblocked rows
+                                # update SUMS and BONUS and TOTAL
+                                # BONUS
+                                if j == 6:
+                                    if sum(player_points[:6]) > 1:
+                                        player_points[6] = 35
+                                if j == 7:
+                                    player_points[7] = sum(player_points[:7])
+                                if j == 15:
+                                    player_points[15] = sum(player_points[8:15])
+                                if j == 16:
+                                    player_points[16] = player_points[7] + player_points[15]
+
+                                if not player_blocked_points[j] or j in self.UNCLICKABLE_POINTS:
+                                    player_texts[j] = self.font.render(str(player_points[j]), 1, GREY)
+                                else:
+                                    player_texts[j] = self.font.render(str(player_points[j]), 1, RED)
+
                             return True
             elif not player_blocked_points[i]:
                 player_texts[i] = self.font.render(str(temp_points[i]), 1, BLACK) # TODO: change inactive color player to GRAY
