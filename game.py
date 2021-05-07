@@ -14,7 +14,7 @@ GREEN_BG = (48, 128, 72)
 DARK_WHITE = (220, 220, 210)
 DIE_6_PATH = os.path.join("data", "die_6.png")
 
-
+# TODO: let block dice
 def get_random_dice(DiceGroup, number_of_dice=5):
     DiceGroup.empty()
     for i in range(number_of_dice):
@@ -24,19 +24,35 @@ pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
 
 screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
-players = 4 # changable
+players = 2 # changable
 
 dice_group = Dice()
 table = Table(screen, DARK_WHITE, 500, 120, 420, 720, players)
 
 shuffle = True
 shuffle_times = 0
-# chosed_points = False
-player_move = 1 # change after move
+player_move = 1
 get_random_dice(dice_group)
 table.draw()
 
 while True:
+    if table.blocked_points[players-1].count(True) == 17: # end of game
+        player_total = {}
+        totals = []
+        won = []
+        for i in range(players):
+            player_total[i+1] = table.players_points[i][16]
+            totals.append(table.players_points[i][16])
+        totals = sorted(totals, reverse=True)
+        player_total = sorted(player_total.items(), key=lambda x: x[1], reverse=True)
+        for i in range(totals.count(totals[0])):
+            won.append(player_total[i][0])
+        if len(won) == players:
+            print("Tie!")
+        else:
+            print("Won: ", end="")
+            [print(player) for player in won]
+        break # TODO: info about won
     if table.update(dice_group, player_move, pygame.mouse.get_pos()): # clicked
         player_move += 1
         shuffle_times = 0

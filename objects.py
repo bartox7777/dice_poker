@@ -11,6 +11,7 @@ class Die(Sprite):
     def __init__(self, die_number, x=0, y=0):
         super().__init__()
         self.die_number = die_number
+        self.blocked = False
 
         if die_number not in range(1, 7):
             raise Exception("die_number must be between 1 and 6")
@@ -57,7 +58,7 @@ class Table(Sprite):
         self.blocked_points = []
         for _ in range(self.players):
             self.players_points.append([0] * len(self.__INFOS))
-            self.texts_players_points.append([self.font.render("0", 1, GREY)] * len(self.__INFOS)) # TODO: show nothing instead of 0
+            self.texts_players_points.append([self.font.render("0", 1, GREY)] * len(self.__INFOS))
             self.blocked_points.append([False] * len(self.__INFOS))
 
     def draw(self):
@@ -238,6 +239,4 @@ class Table(Sprite):
 
                             return True
             elif not player_blocked_points[i]:
-                player_texts[i] = self.font.render(str(temp_points[i]), 1, BLACK) # TODO: change inactive color player to GRAY
-
-# TODO: dont show None in UNCLICKABLE_POINTS and dont show zeros for default
+                player_texts[i] = self.font.render(str(temp_points[i]), 1, BLACK)
