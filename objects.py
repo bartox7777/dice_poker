@@ -8,21 +8,44 @@ from pygame.sprite import Sprite, Group
 pygame.init()
 
 class Die(Sprite):
-    def __init__(self, die_number, x=0, y=0):
+    def __init__(self, die_number, x=0, y=0, blocked=False):
         super().__init__()
         self.die_number = die_number
-        self.blocked = False
+        self.blocked = blocked
+        self.x = x
+        self.y = y
 
         if die_number not in range(1, 7):
             raise Exception("die_number must be between 1 and 6")
-        dice_images = [os.path.join("data", "die_{}.png".format(i+1)) for i in range(6)]
-
-        try:
-            self.image = pygame.image.load(dice_images[die_number-1]).convert_alpha()
-        except:
-            raise Exception("Couldn't load image {}".format(dice_images[die_number-1]))
+        self.dice_images = [os.path.join("data", "die_{}.png".format(i+1)) for i in range(6)]
+        self.dice_images_reversed = [os.path.join("data", "die_{}_reversed.png".format(i+1)) for i in range(6)]
+        # DRY!
+        if self.blocked:
+            try:
+                self.image = pygame.image.load(self.dice_images_reversed[self.die_number-1]).convert_alpha()
+            except:
+                raise Exception("Couldn't load image {}".format(self.dice_images_reversed[self.die_number-1]))
+        else:
+            try:
+                self.image = pygame.image.load(self.dice_images[self.die_number-1]).convert_alpha()
+            except:
+                raise Exception("Couldn't load image {}".format(self.dice_images[self.die_number-1]))
 
         self.rect = self.image.get_rect(x=x, y=y)
+
+    def change_state(self):
+        self.blocked = not self.blocked
+        # DRY!
+        if self.blocked:
+            try:
+                self.image = pygame.image.load(self.dice_images_reversed[self.die_number-1]).convert_alpha()
+            except:
+                raise Exception("Couldn't load image {}".format(self.dice_images_reversed[self.die_number-1]))
+        else:
+            try:
+                self.image = pygame.image.load(self.dice_images[self.die_number-1]).convert_alpha()
+            except:
+                raise Exception("Couldn't load image {}".format(self.dice_images[self.die_number-1]))
 
     def __repr__(self):
         return "Die {}".format(self.die_number)

@@ -1,4 +1,5 @@
 # POKEROWE KOŚCI (inspiracja: https://www.kurnik.pl/kosci/)
+from hashlib import new
 import os
 import sys
 import pygame
@@ -16,9 +17,19 @@ DIE_6_PATH = os.path.join("data", "die_6.png")
 
 # TODO: let block dice
 def get_random_dice(DiceGroup, number_of_dice=5):
-    DiceGroup.empty()
-    for i in range(number_of_dice):
-        DiceGroup.add(Die(randint(1, 6), DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
+    if len(DiceGroup) == 0:
+        for i in range(number_of_dice):
+            DiceGroup.add(Die(randint(1, 6), DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
+    else:
+        new_dice_group = Dice()
+        for die in DiceGroup:
+            if die.blocked:
+                new_dice_group.add(die)
+            else:
+                new_dice_group.add(Die(randint(1, 6), die.x, die.y))
+        DiceGroup.empty()
+        for die in new_dice_group:
+            DiceGroup.add(die)
 
 pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
@@ -36,6 +47,7 @@ get_random_dice(dice_group)
 table.draw()
 
 while True:
+    mouse_pos = pygame.mouse.get_pos()
     if table.blocked_points[players-1].count(True) == 17: # end of game
         player_total = {}
         totals = []
@@ -53,9 +65,10 @@ while True:
             print("Won: ", end="")
             [print(player) for player in won]
         break # TODO: info about won
-    if table.update(dice_group, player_move, pygame.mouse.get_pos()): # clicked
+    if table.update(dice_group, player_move, mouse_pos): # clicked
         player_move += 1
         shuffle_times = 0
+        dice_group.empty()
         get_random_dice(dice_group)
         if player_move > players:
             player_move = 1
@@ -63,7 +76,12 @@ while True:
         if event.type == pygame.QUIT:
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: # TODO: button to shuffle dice
-            if shuffle_times < 2:
+            changed_state = False
+            for die in dice_group:
+                if die.rect.collidepoint(mouse_pos):
+                    die.change_state()
+                    changed_state = True
+            if not changed_state and shuffle_times < 2:
                 shuffle_times += 1
                 get_random_dice(dice_group)
 
