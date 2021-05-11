@@ -191,8 +191,10 @@ class Table(Sprite):
 
                 # FULL HOUSE (3+2x)
                 if i == 10:
-                    if len(set(dice_numbers)) == 2:
-                        temp_points[i] = 25
+                    set_dice_numbers = set(dice_numbers)
+                    if len(set_dice_numbers) == 2:
+                        if dice_numbers.count(set_dice_numbers.pop()) in [2, 3] and dice_numbers.count(set_dice_numbers.pop()) in [2, 3]:
+                            temp_points[i] = 25
 
                 # MINI SERIE
                 if i == 11:
