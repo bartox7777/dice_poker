@@ -20,5 +20,11 @@ while not players_number:
         print(data.decode(FORMAT))
         break
 
+while True:
+    recv_data = client.recv(2048)
+    if recv_data:
+        print(recv_data)
+        break
+
 client.send(DISCONNECT_MESSAGE.encode(FORMAT))
 client.close()

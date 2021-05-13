@@ -24,11 +24,20 @@ player_dict = {
     "blocked_points": None
 }
 
+player_socket = {}
+player_data_to_send = {}
+
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected")
 
+    player_id = str(threading.activeCount() - 1)
+    player_socket[player_id] = conn
+
     player_dict_temp = player_dict.copy()
-    player_dict_temp["player_id"] = str(threading.activeCount() - 1)
+    player_dict_temp["player_id"] = player_id
+
+    player_data_to_send[player_id] = player_dict_temp
+
     json_dict = json.dumps(player_dict_temp)
     conn.send(json_dict.encode(FORMAT))
 
@@ -52,8 +61,12 @@ def start():
         thread.start()
         print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
 
-        if (threading.activeCount() - 1) == PLAYERS:  # all players connected
-            pass
+        if (threading.activeCount() - 1) == int(PLAYERS):  # all players connected
+            player_dict["start"] = True
+            for player_id, player in player_socket.items():
+                player_data_to_send[player_id]["start"] = True
+                player_data_to_send[player_id]["turn"] = 1
+                player.send(json.dumps(player_data_to_send[player_id]).encode(FORMAT))
 
 
 print("[STARTING] starting server...")
