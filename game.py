@@ -1,3 +1,4 @@
+# coding: utf-8
 # POKEROWE KOŚCI (inspiracja: https://www.kurnik.pl/kosci/)
 from hashlib import new
 import os
@@ -5,7 +6,6 @@ import sys
 import pygame
 from random import randint
 from objects import Die, Dice, Table
-
 
 pygame.init()
 DICE_X = 1200
@@ -15,21 +15,21 @@ GREEN_BG = (48, 128, 72)
 DARK_WHITE = (220, 220, 210)
 DIE_6_PATH = os.path.join("data", "die_6.png")
 
-# TODO: let block dice
-def get_random_dice(DiceGroup, number_of_dice=5):
-    if len(DiceGroup) == 0:
+def get_random_dice(dice_group, number_of_dice=5):
+    if len(dice_group) == 0:
         for i in range(number_of_dice):
-            DiceGroup.add(Die(randint(1, 6), DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
+            dice_group.add(Die(randint(1, 6), DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
     else:
         new_dice_group = Dice()
-        for die in DiceGroup:
+        for die in dice_group:
             if die.blocked:
                 new_dice_group.add(die)
             else:
                 new_dice_group.add(Die(randint(1, 6), die.x, die.y))
-        DiceGroup.empty()
+        dice_group.empty()
         for die in new_dice_group:
-            DiceGroup.add(die)
+            dice_group.add(die)
+
 
 pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
@@ -64,7 +64,7 @@ while True:
         else:
             print("Won: ", end="")
             [print(player) for player in won]
-        break # TODO: info about won
+        break  # TODO: info about won
     if table.update(dice_group, player_move, mouse_pos): # clicked
         player_move += 1
         shuffle_times = 0
@@ -75,7 +75,7 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: # TODO: button to shuffle dice
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # TODO: button to shuffle dice
             changed_state = False
             for die in dice_group:
                 if die.rect.collidepoint(mouse_pos):
