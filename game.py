@@ -1,19 +1,27 @@
 # coding: utf-8
 # POKEROWE KOŚCI (inspiracja: https://www.kurnik.pl/kosci/)
-from hashlib import new
 import os
 import sys
+import json
+import socket
 import pygame
 from random import randint
 from objects import Die, Dice, Table
 
 pygame.init()
+
 DICE_X = 1200
 DICE_Y_SPACE = 120
 DICE_PADDING_TOP = 70
 GREEN_BG = (48, 128, 72)
 DARK_WHITE = (220, 220, 210)
 DIE_6_PATH = os.path.join("data", "die_6.png")
+
+PORT = 65432
+FORMAT = "utf-8"
+SERVER = "192.168.8.127"
+ADDR = (SERVER, PORT)
+DISCONNECT_MESSAGE = "!DISCONNECT"
 
 def get_random_dice(dice_group, number_of_dice=5):
     if len(dice_group) == 0:
@@ -30,12 +38,25 @@ def get_random_dice(dice_group, number_of_dice=5):
         for die in new_dice_group:
             dice_group.add(die)
 
-
 pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
 
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.setblocking(False)
+client.connect_ex(ADDR)
+
+data = None
+while not data:
+    try:
+        data = client.recv(2048)
+    except:
+        continue
+    if data:
+        data = json.loads(data.decode(FORMAT))
+        players = int(data["players"])  # getting number of players
+        break
+
 screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
-players = 2 # changable
 
 dice_group = Dice()
 table = Table(screen, DARK_WHITE, 500, 120, 420, 720, players)
@@ -47,6 +68,13 @@ get_random_dice(dice_group)
 table.draw()
 
 while True:
+    try:
+        recv_data = client.recv(2048)
+        if recv_data:
+            print(recv_data)
+    except:
+        pass
+
     mouse_pos = pygame.mouse.get_pos()
     if table.blocked_points[players-1].count(True) == 17: # end of game
         player_total = {}
@@ -74,6 +102,8 @@ while True:
             player_move = 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            client.send(DISCONNECT_MESSAGE.encode(FORMAT))
+            client.close()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # TODO: button to shuffle dice
             changed_state = False

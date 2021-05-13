@@ -44,7 +44,10 @@ def handle_client(conn, addr):
     connected = True
 
     while connected:
-        data = conn.recv(2048).decode(FORMAT)
+        try:
+            data = conn.recv(2048).decode(FORMAT)
+        except:
+            continue
         if data:
             if data == DISCONNECT_MESSAGE:
                 connected = False
