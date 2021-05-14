@@ -11,6 +11,7 @@ SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
 DISCONNECT_MESSAGE = "!DISCONNECT"
+LENGTH = 2048
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
@@ -18,14 +19,20 @@ server.bind(ADDR)
 player_dict = {
     "players": PLAYERS,
     "player_id": None,
-    "turn": None,
+    "turn": 1,
     "start": False,
     "players_points": None,
-    "blocked_points": None
+    "blocked_points": None,
+    "dice": None
 }
 
 player_socket = {}
 player_data_to_send = {}
+
+def prep_data(data):
+    data = json.dumps(data).encode(FORMAT)
+    data += b" " * (LENGTH - len(data))
+    return data
 
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected")
@@ -38,20 +45,25 @@ def handle_client(conn, addr):
 
     player_data_to_send[player_id] = player_dict_temp
 
-    json_dict = json.dumps(player_dict_temp)
-    conn.send(json_dict.encode(FORMAT))
+    conn.send(prep_data(player_dict_temp))
 
     connected = True
 
     while connected:
         try:
-            data = conn.recv(2048).decode(FORMAT)
+            data = json.loads(conn.recv(LENGTH).decode(FORMAT))
         except:
             continue
         if data:
+            print(f"[RECEIVED DATA] from {addr}: {data}")
             if data == DISCONNECT_MESSAGE:
                 connected = False
-            print(f"[RECEIVED DATA] from {addr}: {data}")
+                break
+            print(type(data), data)
+            if data.get("dice"):
+                for player_id, socket in player_socket.items():
+                    player_data_to_send[player_id]["dice"] = data["dice"]
+                    socket.send(prep_data(player_data_to_send[player_id]))
     print(f"[CLOSE CONNECTION] connection closed {addr}")
     conn.close()
 
@@ -68,8 +80,7 @@ def start():
             player_dict["start"] = True
             for player_id, player in player_socket.items():
                 player_data_to_send[player_id]["start"] = True
-                player_data_to_send[player_id]["turn"] = 1
-                player.send(json.dumps(player_data_to_send[player_id]).encode(FORMAT))
+                player.send(prep_data(player_data_to_send[player_id]))
 
 
 print("[STARTING] starting server...")
