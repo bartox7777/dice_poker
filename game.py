@@ -29,21 +29,6 @@ def prep_data(data):
     data += b" " * (LENGTH - len(data))
     return data
 
-def get_random_dice(dice_group, number_of_dice=5):
-    if len(dice_group) == 0:
-        for i in range(number_of_dice):
-            dice_group.add(Die(randint(1, 6), DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
-    else:
-        new_dice_group = Dice()
-        for die in dice_group:
-            if die.blocked:
-                new_dice_group.add(die)
-            else:
-                new_dice_group.add(Die(randint(1, 6), die.x, die.y))
-        dice_group.empty()
-        for die in new_dice_group:
-            dice_group.add(die)
-
 pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
 
@@ -63,6 +48,27 @@ while not data:
         player_id = int(data["player_id"])
         break
 
+def get_random_dice(dice_group, number_of_dice=5):
+    if len(dice_group) == 0:
+        for i in range(number_of_dice):
+            dice_group.add(Die(randint(1, 6), DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
+    else:
+        new_dice_group = Dice()
+        for die in dice_group:
+            if die.blocked:
+                new_dice_group.add(die)
+            else:
+                new_dice_group.add(Die(randint(1, 6), die.x, die.y))
+        dice_group.empty()
+        for die in new_dice_group:
+            dice_group.add(die)
+
+    # send
+    dice_numbers = {
+        "dice": [die.die_number for die in dice_group]
+    }
+    client.send(prep_data(dice_numbers))
+
 screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
 
 dice_group = Dice()
@@ -78,20 +84,23 @@ while True:
         if data:
             print(f"[RECEIVED DATA] {data}")
             if data["start"]:
+                player_move = data["turn"]
                 if player_id == data["turn"] and auto_shuffle:
+                    shuffle_times = 0
                     get_random_dice(dice_group)
-                    dice_numbers = {
-                        "dice": [die.die_number for die in dice_group]
-                    }
-                    client.send(prep_data(dice_numbers))
                     auto_shuffle = False
                 if player_id != data["turn"]:
                     auto_shuffle = True
-                    dice_group.remove()
-                    i = 0
-                    for die_number in data["dice"]:
-                        dice_group.add(Die(die_number, DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
-                        i += 1
+                    if data.get("dice"):
+                        dice_group.empty()
+                        i = 0
+                        for die_number in data["dice"]:
+                            dice_group.add(Die(die_number, DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
+                            i += 1
+                if data["players_points"]:
+                    table.blocked_points = data["blocked_points"]
+                    table.players_points = data["players_points"]
+                    table.points_to_text()
     except:
         pass
 
@@ -117,15 +126,19 @@ while True:
         break  # TODO: info about won
 
     # send it to the server
-    if table.update(dice_group, player_move, mouse_pos): # clicked
-        # player_move += 1
-        shuffle_times = 0
-        dice_group.empty()
-        get_random_dice(dice_group)
-
-        # server need to take care of that
-        # if player_move > players:
-        #     player_move = 1
+    if data["turn"] == player_id:
+        if table.update(dice_group, player_move, mouse_pos): # clicked
+            data["players_points"] = table.players_points
+            data["blocked_points"] = table.blocked_points
+            data["dice"] = None
+            dice_group.empty()
+            client.send(prep_data(data))
+            # player_move += 1
+            # shuffle_times = 0
+            # get_random_dice(dice_group)
+            # server need to take care of that
+            # if player_move > players:
+            #     player_move = 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             client.send(prep_data(DISCONNECT_MESSAGE))

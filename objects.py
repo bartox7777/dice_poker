@@ -59,7 +59,6 @@ class Dice(Group):
 class Table(Sprite):
     def __init__(self, surface, color, topleft_x, topleft_y, width, height, players):
         GREY = (120, 120, 120)
-        RED = (255, 0, 0)
 
         super().__init__()
         self.surface = surface
@@ -83,6 +82,16 @@ class Table(Sprite):
             self.players_points.append([0] * len(self.__INFOS))
             self.texts_players_points.append([self.font.render("0", 1, GREY)] * len(self.__INFOS))
             self.blocked_points.append([False] * len(self.__INFOS))
+
+    def points_to_text(self):
+        GREY = (120, 120, 120)
+        RED = (255, 0, 0)
+        for i in range(self.players):
+            for j in range(len(self.__INFOS)):
+                if not self.blocked_points[i][j] or j in self.UNCLICKABLE_POINTS:
+                    self.texts_players_points[i][j] = self.font.render(str(self.players_points[i][j]), 1, GREY)
+                else:
+                    self.texts_players_points[i][j] = self.font.render(str(self.players_points[i][j]), 1, RED)
 
     def draw(self):
         BLACK = (0, 0, 0)

@@ -1,5 +1,4 @@
 # help: TechWithTim
-# TODO: replace it to game.py
 import socket
 import threading
 import json
@@ -59,10 +58,19 @@ def handle_client(conn, addr):
             if data == DISCONNECT_MESSAGE:
                 connected = False
                 break
-            print(type(data), data)
             if data.get("dice"):
                 for player_id, socket in player_socket.items():
                     player_data_to_send[player_id]["dice"] = data["dice"]
+                    socket.send(prep_data(player_data_to_send[player_id]))
+            if data.get("dice") is None: # end of turn
+                for player_id, socket in player_socket.items():
+                    player_data_to_send[player_id]["dice"] = None
+                    turn = data["turn"] + 1
+                    if turn > int(PLAYERS):
+                        turn = 1
+                    player_data_to_send[player_id]["turn"] = turn
+                    player_data_to_send[player_id]["players_points"] = data["players_points"]
+                    player_data_to_send[player_id]["blocked_points"] = data["blocked_points"]
                     socket.send(prep_data(player_data_to_send[player_id]))
     print(f"[CLOSE CONNECTION] connection closed {addr}")
     conn.close()
