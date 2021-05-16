@@ -19,7 +19,7 @@ DIE_6_PATH = os.path.join("data", "die_6.png")
 
 PORT = 65432
 FORMAT = "utf-8"
-SERVER = "192.168.8.127"
+SERVER = input("Server IP: ")
 ADDR = (SERVER, PORT)
 DISCONNECT_MESSAGE = "!DISCONNECT"
 LENGTH = 2048
@@ -63,9 +63,9 @@ def get_random_dice(dice_group, number_of_dice=5):
         for die in new_dice_group:
             dice_group.add(die)
 
-    # send
     dice_numbers = {
-        "dice": [die.die_number for die in dice_group]
+        "dice": [die.die_number for die in dice_group],
+        "blocked_dice": [die.blocked for die in dice_group]
     }
     client.send(prep_data(dice_numbers))
 
@@ -76,6 +76,7 @@ table = Table(screen, DARK_WHITE, 500, 120, 420, 720, players)
 
 shuffle_times = 0
 auto_shuffle = True
+all_connected = False
 table.draw()
 
 while True:
@@ -84,18 +85,27 @@ while True:
         if data:
             print(f"[RECEIVED DATA] {data}")
             if data["start"]:
+                # if data["blocked_dice"]:
+                #     i = 0
+                #     for die in dice_group:
+                #         if data["blocked_dice"][i] and not die.blocked:
+                #             die.change_state()
+                #         i += 1
+
+                all_connected = True
                 player_move = data["turn"]
                 if player_id == data["turn"] and auto_shuffle:
                     shuffle_times = 0
+                    dice_group.empty()
                     get_random_dice(dice_group)
                     auto_shuffle = False
-                if player_id != data["turn"]:
+                if player_id != data["turn"]: # not turn of client
                     auto_shuffle = True
                     if data.get("dice"):
                         dice_group.empty()
                         i = 0
                         for die_number in data["dice"]:
-                            dice_group.add(Die(die_number, DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP))
+                            dice_group.add(Die(die_number, DICE_X, (i+1)*DICE_Y_SPACE+DICE_PADDING_TOP, data["blocked_dice"][i]))
                             i += 1
                 if data["players_points"]:
                     table.blocked_points = data["blocked_points"]
@@ -106,7 +116,6 @@ while True:
 
     mouse_pos = pygame.mouse.get_pos()
 
-    # server can take care of who won
     if table.blocked_points[players-1].count(True) == 17: # end of game
         player_total = {}
         totals = []
@@ -125,26 +134,20 @@ while True:
             [print(player) for player in won]
         break  # TODO: info about won
 
-    # send it to the server
-    if data["turn"] == player_id:
+    if data["turn"] == player_id and all_connected:
         if table.update(dice_group, player_move, mouse_pos): # clicked
             data["players_points"] = table.players_points
             data["blocked_points"] = table.blocked_points
             data["dice"] = None
             dice_group.empty()
             client.send(prep_data(data))
-            # player_move += 1
-            # shuffle_times = 0
-            # get_random_dice(dice_group)
-            # server need to take care of that
-            # if player_move > players:
-            #     player_move = 1
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             client.send(prep_data(DISCONNECT_MESSAGE))
             client.close()
             sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and player_move == player_id:  # TODO: button to shuffle dice
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and player_move == player_id and all_connected:  # TODO: button to shuffle dice
             changed_state = False
             for die in dice_group:
                 if die.rect.collidepoint(mouse_pos):

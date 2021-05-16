@@ -22,7 +22,8 @@ player_dict = {
     "start": False,
     "players_points": None,
     "blocked_points": None,
-    "dice": None
+    "dice": None,
+    "blocked_dice": None
 }
 
 player_socket = {}
@@ -61,6 +62,7 @@ def handle_client(conn, addr):
             if data.get("dice"):
                 for player_id, socket in player_socket.items():
                     player_data_to_send[player_id]["dice"] = data["dice"]
+                    player_data_to_send[player_id]["blocked_dice"] = data["blocked_dice"]
                     socket.send(prep_data(player_data_to_send[player_id]))
             if data.get("dice") is None: # end of turn
                 for player_id, socket in player_socket.items():
@@ -71,6 +73,7 @@ def handle_client(conn, addr):
                     player_data_to_send[player_id]["turn"] = turn
                     player_data_to_send[player_id]["players_points"] = data["players_points"]
                     player_data_to_send[player_id]["blocked_points"] = data["blocked_points"]
+                    player_data_to_send[player_id]["blocked_dice"] = [False] * 5
                     socket.send(prep_data(player_data_to_send[player_id]))
     print(f"[CLOSE CONNECTION] connection closed {addr}")
     conn.close()

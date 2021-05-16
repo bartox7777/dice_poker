@@ -193,9 +193,9 @@ class Table(Sprite):
                 # TRIPLET and QUARTET
                 if i in [8, 9]:
                     for die_number in set(dice_numbers):
-                        if dice_numbers.count(die_number) == 3:
+                        if dice_numbers.count(die_number) >= 3:
                             temp_points[8] = sum(dice_numbers)
-                        if dice_numbers.count(die_number) == 4:
+                        if dice_numbers.count(die_number) >= 4:
                             temp_points[9] = sum(dice_numbers)
 
                 # FULL HOUSE (3+2x)
@@ -212,8 +212,6 @@ class Table(Sprite):
                     for j in range(len(dice_numbers) - 1):
                         if sorted_dice_numbers[j] + 1 == sorted_dice_numbers[j+1]:
                             counted += 1
-                        else:
-                            counted = 1
                         if counted == 4:
                             temp_points[i] = 30
 
@@ -224,8 +222,6 @@ class Table(Sprite):
                     for j in range(len(dice_numbers) - 1):
                         if sorted_dice_numbers[j] + 1 == sorted_dice_numbers[j+1]:
                             counted += 1
-                        else:
-                            counted = 1
                         if counted == 5:
                             temp_points[i] = 40
                 # KNIFFEL
