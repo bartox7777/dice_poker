@@ -17,9 +17,9 @@ GREEN_BG = (48, 128, 72)
 DARK_WHITE = (220, 220, 210)
 DIE_6_PATH = os.path.join("data", "die_6.png")
 
-PORT = 65432
 FORMAT = "utf-8"
 SERVER = input("Server IP: ")
+PORT = input("Server PORT: ")
 ADDR = (SERVER, PORT)
 DISCONNECT_MESSAGE = "!DISCONNECT"
 LENGTH = 2048
@@ -85,13 +85,6 @@ while True:
         if data:
             print(f"[RECEIVED DATA] {data}")
             if data["start"]:
-                # if data["blocked_dice"]:
-                #     i = 0
-                #     for die in dice_group:
-                #         if data["blocked_dice"][i] and not die.blocked:
-                #             die.change_state()
-                #         i += 1
-
                 all_connected = True
                 player_move = data["turn"]
                 if player_id == data["turn"] and auto_shuffle:
