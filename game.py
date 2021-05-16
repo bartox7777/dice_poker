@@ -19,7 +19,7 @@ DIE_6_PATH = os.path.join("data", "die_6.png")
 
 FORMAT = "utf-8"
 SERVER = input("Server IP: ")
-PORT = input("Server PORT: ")
+PORT = int(input("Server PORT: "))
 ADDR = (SERVER, PORT)
 DISCONNECT_MESSAGE = "!DISCONNECT"
 LENGTH = 2048

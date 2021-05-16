@@ -2,10 +2,11 @@
 import socket
 import threading
 import json
+from random import randint
 
 PLAYERS = input("Number of players: ")
 
-PORT = 65432
+PORT = randint(49152, 65535)
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = "utf-8"
