@@ -1,16 +1,21 @@
 # POKEROWE KOŚCI (inspiracja: https://www.kurnik.pl/kosci/)
-from hashlib import new
 import os
 import sys
 import pygame
+from screeninfo import get_monitors
 from random import randint
 from objects import Die, Dice, Table
 
 
 pygame.init()
-DICE_X = 1200
-DICE_Y_SPACE = 120
-DICE_PADDING_TOP = 70
+
+for prop in get_monitors():
+    SCREEN_WIDTH = prop.width
+    SCREEN_HEIGHT = prop.height
+
+DICE_X = SCREEN_WIDTH*4/5
+DICE_Y_SPACE = SCREEN_HEIGHT/8
+DICE_PADDING_TOP = SCREEN_HEIGHT/20
 GREEN_BG = (48, 128, 72)
 DARK_WHITE = (220, 220, 210)
 DIE_6_PATH = os.path.join("data", "die_6.png")
@@ -34,11 +39,11 @@ def get_random_dice(DiceGroup, number_of_dice=5):
 pygame.display.set_caption("Dice poker")
 pygame.display.set_icon(pygame.image.load(DIE_6_PATH))
 
-screen = pygame.display.set_mode(size=(1900, 1000), flags=pygame.RESIZABLE)
+screen = pygame.display.set_mode(size=(SCREEN_WIDTH, SCREEN_HEIGHT), flags=pygame.RESIZABLE)
 players = 2 # changable
 
 dice_group = Dice()
-table = Table(screen, DARK_WHITE, 500, 120, 420, 720, players)
+table = Table(screen, DARK_WHITE, SCREEN_WIDTH/4, 10, SCREEN_WIDTH/3, SCREEN_WIDTH/2, players)
 
 shuffle = True
 shuffle_times = 0
